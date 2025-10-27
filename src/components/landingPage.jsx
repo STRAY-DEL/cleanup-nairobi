@@ -1,4 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import Login from './Login';
+import MapView from './MapView';
 import { Trash2, Smartphone, BarChart3, Menu, X, CheckCircle, ArrowRight } from 'lucide-react';
 
 // Define the images for the Hero Section Slider (themed around cleanup and Nairobi)
@@ -47,12 +50,13 @@ const ImageSlider = ({ images }) => {
 
 // The Main App Component
 const LandingPage = () => {
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // --- Helper Components ---
 
   const NavLink = ({ href, children }) => (
-    <a href={href} className="text-gray-600 hover:text-green-700 transition duration-150 p-2 text-sm font-medium">
+        <a href={href} className="text-gray-700 hover:text-green-600 font-semibold text-base transition-colors duration-300">
       {children}
     </a>
   );
@@ -86,14 +90,23 @@ const LandingPage = () => {
         </div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex space-x-8">
+        <div className="hidden md:flex items-center space-x-4">
+        <nav className="flex space-x-6">
           <NavLink href="#home">Home</NavLink>
           <NavLink href="#features">Features</NavLink>
           <NavLink href="#how-it-works">How It Works</NavLink>
           <NavLink href="#contact">Contact</NavLink>
         </nav>
 
-        {/* Mobile Menu Button */}
+        <div className="flex items-center space-x-2">
+            <Link to="/signup" className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 transition duration-300">
+              Get started
+            </Link>
+            <button onClick={() => setIsLoginOpen(true)} className="inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-gray-700 bg-gray-100 hover:bg-gray-200 transition duration-300">
+              Login
+            </button>
+        </div>
+        </div>
         <button
           className="md:hidden p-2 rounded-full text-gray-600 hover:bg-gray-100 transition"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -118,7 +131,7 @@ const LandingPage = () => {
 
   const HeroSection = () => (
     // Height is set to ensure the dynamic background is visible.
-    <div id="home" className="relative h-[80vh] min-h-[500px] pt-24 overflow-hidden">
+        <div id="home" className="relative h-screen min-h-[500px] pt-24 overflow-hidden">
       
       {/* 1. Background Image Slider (Z-0) */}
       <ImageSlider images={HERO_IMAGES} />
@@ -149,12 +162,7 @@ const LandingPage = () => {
               <div className="relative w-64 h-96 bg-gray-900 rounded-[35px] shadow-[0_20px_50px_rgba(0,0,0,0.8)] border-[6px] border-gray-800 p-1">
                 {/* Phone screen placeholder */}
                 <div className="w-full h-full bg-white rounded-[29px] overflow-hidden">
-                    <img
-                        src="https://placehold.co/600x900/4ade80/ffffff?text=App+Map+Screen"
-                        alt="Mobile app showing map with waste bin locations"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { e.target.onerror = null; e.target.src = "https://placehold.co/600x900/4ade80/ffffff?text=App+Map+Screen" }}
-                    />
+                    <MapView />
                 </div>
                 {/* Home indicator/notch */}
                 <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-16 h-1.5 bg-gray-600 rounded-full"></div>
@@ -265,6 +273,7 @@ const LandingPage = () => {
         <div id="how-it-works" className="h-4 bg-gray-50"></div>
         <div id="contact" className="h-4 bg-gray-50"></div>
       </main>
+      <Login isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <Footer />
     </div>
   );

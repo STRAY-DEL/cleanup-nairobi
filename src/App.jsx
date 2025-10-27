@@ -1,9 +1,15 @@
-import { useState } from "react";
-import LandingPage from "./components/landingPage";
+import { Routes, Route } from 'react-router-dom';
+import LandingPage from './components/landingPage';
+import SignUp from './components/SignUp';
+import Dashboard from './components/Dashboard';
 
 function App() {
   return (
-    <LandingPage />
+    <Routes>
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/signup" element={<SignUp />} />
+      <Route path="/dashboard" element={<Dashboard />} />
+    </Routes>
   )
 }
 
