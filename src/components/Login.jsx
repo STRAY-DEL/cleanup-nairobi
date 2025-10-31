@@ -10,7 +10,18 @@ const Login = ({ isOpen, onClose }) => {
   const handleLogin = () => {
     // Check for demo credentials
     if (email === 'user@gmail.com' && password === '123456') {
+      // Store user data in localStorage
+      localStorage.setItem('token', 'demo-token-123');
+      localStorage.setItem('userName', 'Demo User');
+      localStorage.setItem('userEmail', email);
+      
+      // Navigate to dashboard
       navigate('/dashboard');
+      
+      // Close modal if needed
+      if (onClose) onClose();
+    } else {
+      alert('Invalid credentials. Use: user@gmail.com / 123456');
     }
   };
   if (!isOpen) return null;
