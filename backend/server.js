@@ -55,7 +55,7 @@ app.listen(PORT, () => {
   console.log(`
 ╔═══════════════════════════════════════════════════════╗
 ║                                                       ║
-║   🌿 Cleanup Nairobi API Server                      ║
+║    Cleanup Nairobi API Server                      ║
 ║                                                       ║
 ║   Server running on port ${PORT}                        ║
 ║   Environment: ${process.env.NODE_ENV || 'development'}                      ║

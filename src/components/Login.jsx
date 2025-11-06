@@ -1,27 +1,47 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { X } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Login = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = () => {
-    // Check for demo credentials
-    if (email === 'user@gmail.com' && password === '123456') {
-      // Store user data in localStorage
-      localStorage.setItem('token', 'demo-token-123');
-      localStorage.setItem('userName', 'Demo User');
-      localStorage.setItem('userEmail', email);
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    
+    // Clear previous errors
+    setError('');
+    
+    // Validate inputs
+    if (!email || !password) {
+      setError('Please enter both email and password');
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    try {
+      const result = await login({ email, password });
       
-      // Navigate to dashboard
-      navigate('/dashboard');
-      
-      // Close modal if needed
-      if (onClose) onClose();
-    } else {
-      alert('Invalid credentials. Use: user@gmail.com / 123456');
+      if (result.success) {
+        // Close modal if needed
+        if (onClose) onClose();
+        
+        // Navigate to dashboard
+        navigate('/dashboard');
+      } else {
+        setError(result.error || 'Invalid email or password');
+      }
+    } catch (err) {
+      console.error('Login error:', err);
+      setError('An unexpected error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
     }
   };
   if (!isOpen) return null;
@@ -36,7 +56,12 @@ const Login = ({ isOpen, onClose }) => {
           <h2 className="text-2xl font-bold text-gray-800">Welcome Back!</h2>
           <p className="text-gray-500">Sign in to continue to CleanUp Nairobi</p>
         </div>
-        <form>
+        {error && (
+          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded-lg text-sm">
+            {error}
+          </div>
+        )}
+        <form onSubmit={handleLogin}>
           <div className="mb-4">
             <label className="block text-gray-700 text-sm font-bold mb-2" htmlFor="email">
               Email Address
@@ -65,11 +90,11 @@ const Login = ({ isOpen, onClose }) => {
           </div>
           <div className="flex items-center justify-between mb-6">
             <button
-              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300"
-              type="button"
-              onClick={handleLogin}
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              type="submit"
+              disabled={isSubmitting}
             >
-              Sign In
+              {isSubmitting ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
           <p className="text-center text-gray-500 text-sm">

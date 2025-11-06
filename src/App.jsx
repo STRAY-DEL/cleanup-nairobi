@@ -1,14 +1,30 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import LandingPage from './components/landingPage';
 import SignUp from './components/SignUp';
-import Dashboard from './components/Dashboard';
+import Login from './components/Login';
+import DashboardLayout from './components/DashboardLayout';
+import Dashboard from './pages/DashboardPage';
+import Profile from './pages/ProfilePage';
+import Collections from './pages/CollectionsPage';
+import Reports from './pages/ReportsPage';
+import Settings from './pages/SettingsPage';
+import { useAuth } from './context/AuthContext';
 
 function App() {
+  const { user } = useAuth();
+
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
+      <Route path="/" element={user ? <Navigate to="/dashboard" /> : <LandingPage />} />
       <Route path="/signup" element={<SignUp />} />
-      <Route path="/dashboard" element={<Dashboard />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/dashboard" element={user ? <DashboardLayout /> : <Navigate to="/login" />}>
+        <Route index element={<Dashboard />} />
+        <Route path="profile" element={<Profile />} />
+        <Route path="collections" element={<Collections />} />
+        <Route path="reports" element={<Reports />} />
+        <Route path="settings" element={<Settings />} />
+      </Route>
     </Routes>
   )
 }
