@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye, EyeOff, Leaf, MapPin, Mail, Lock, User, Phone, ChevronDown } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
@@ -19,6 +21,7 @@ const SignUp = () => {
   const [passwordStrength, setPasswordStrength] = useState(0);
   const [errors, setErrors] = useState({});
   const [isLocationOpen, setIsLocationOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const nairobiLocations = [
     'Westlands',
@@ -237,7 +240,10 @@ const SignUp = () => {
       <div className="w-full lg:w-1/2 flex items-center justify-center p-8 bg-white">
         <div className="w-full max-w-md space-y-8">
           {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center justify-center space-x-3 mb-8">
+          <div 
+            onClick={() => navigate('/')} 
+            className="lg:hidden flex items-center justify-center space-x-3 mb-8 cursor-pointer hover:opacity-80 transition-opacity duration-300"
+          >
             <div className="bg-emerald-700 p-2 rounded-lg">
               <Leaf className="w-6 h-6 text-white" />
             </div>
@@ -445,9 +451,10 @@ const SignUp = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl"
+              disabled={isSubmitting}
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-4 rounded-2xl transition-all duration-300 transform hover:scale-[1.02] shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
-              Sign up
+              {isSubmitting ? 'Creating Account...' : 'Sign up'}
             </button>
           </form>
 

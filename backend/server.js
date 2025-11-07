@@ -71,6 +71,19 @@ const startServer = (port) => {
 };
 
 startServer(DEFAULT_PORT);
+app.listen(PORT, () => {
+  console.log(`
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║    Cleanup Nairobi API Server                      ║
+║                                                       ║
+║   Server running on port ${PORT}                        ║
+║   Environment: ${process.env.NODE_ENV || 'development'}                      ║
+║   Time: ${new Date().toLocaleString()}               ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝
+  `);
+});
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
