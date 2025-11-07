@@ -14,9 +14,7 @@ import adminRoutes from './routes/adminRoutes.js';
 // Load environment variables
 dotenv.config();
 
-// Initialize express app
 const app = express();
-
 
 // Middleware
 app.use(cors({
@@ -49,46 +47,40 @@ app.use(notFound);
 // Error handler
 app.use(errorHandler);
 
-// Start server with automatic fallback if port is in use
-const DEFAULT_PORT = Number(process.env.PORT) || 5000;
+// ---- START SERVER ----
+const DEFAULT_PORT = Number(process.env.PORT) || 5001;
 
 const startServer = (port) => {
   const server = app.listen(port, () => {
-    console.log(`\nServer running on port ${port} (env: ${process.env.NODE_ENV || 'development'})`);
-    console.log(`Started at: ${new Date().toLocaleString()}`);
+    console.log(`
+╔═══════════════════════════════════════════════════════╗
+║                                                       ║
+║        Cleanup Nairobi API Server Running             ║
+║                                                       ║
+║   ➤ Port: ${port}                                     ║
+║   ➤ Environment: ${process.env.NODE_ENV || 'development'}   ║
+║   ➤ Started: ${new Date().toLocaleString()}           ║
+║                                                       ║
+╚═══════════════════════════════════════════════════════╝
+    `);
   });
 
   server.on('error', (err) => {
-    if (err && err.code === 'EADDRINUSE') {
-      console.warn(`Port ${port} in use, trying port ${port + 1}...`);
-      // try next port
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${port} in use, trying port ${port + 1}...`);
       startServer(port + 1);
     } else {
-      console.error('Server error:', err);
+      console.error('❌ Server error:', err);
       process.exit(1);
     }
   });
 };
 
 startServer(DEFAULT_PORT);
-app.listen(PORT, () => {
-  console.log(`
-╔═══════════════════════════════════════════════════════╗
-║                                                       ║
-║    Cleanup Nairobi API Server                      ║
-║                                                       ║
-║   Server running on port ${PORT}                        ║
-║   Environment: ${process.env.NODE_ENV || 'development'}                      ║
-║   Time: ${new Date().toLocaleString()}               ║
-║                                                       ║
-╚═══════════════════════════════════════════════════════╝
-  `);
-});
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
   process.exit(1);
 });
 
