@@ -1,51 +1,32 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { TABLES, USER_ROLES } from '../config/database.js';
 import { hashPassword, comparePassword, generateToken, successResponse, errorResponse } from '../utils/helpers.js';
 
-// Register new user
 export const register = async (req, res) => {
   try {
-    console.log('📝 Registration request received:', { 
-      fullName: req.body.fullName, 
-      email: req.body.email,
-      phone: req.body.phone,
-      location: req.body.location 
-    });
-
     const { fullName, email, password, phone, location, role = USER_ROLES.USER } = req.body;
 
-    // Validate required fields
-    if (!fullName || !email || !password || !phone || !location) {
-      console.error('❌ Missing required fields');
-      return errorResponse(res, 'All fields are required', 400);
-    }
-
-    // Check if user already exists
-    console.log('🔍 Checking if user exists...');
-    const { data: existingUser, error: checkError } = await supabase
+    // Check if user already exists using admin client (server-side)
+    const { data: existingUser, error: existingError } = await supabaseAdmin
       .from(TABLES.USERS)
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle();
 
-    if (checkError && checkError.code !== 'PGRST116') {
-      // PGRST116 means no rows returned, which is what we want
-      console.error('❌ Error checking existing user:', checkError);
-      return errorResponse(res, 'Database error while checking user', 500);
+    if (existingError) {
+      console.error('Error checking existing user:', existingError);
+      return errorResponse(res, 'Failed to validate user', 500);
     }
 
     if (existingUser) {
-      console.log('❌ User already exists');
       return errorResponse(res, 'User with this email already exists', 409);
     }
 
     // Hash password
-    console.log('🔐 Hashing password...');
     const hashedPassword = await hashPassword(password);
 
-    // Create user
-    console.log('💾 Creating user in database...');
-    const { data: user, error } = await supabase
+    // Create user using admin client to ensure insert succeeds regardless of RLS
+    const { data: user, error } = await supabaseAdmin
       .from(TABLES.USERS)
       .insert([
         {
@@ -59,24 +40,19 @@ export const register = async (req, res) => {
         }
       ])
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
-      console.error('❌ Database insert error:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      return errorResponse(res, `Failed to create user: ${error.message}`, 500);
+      console.error('Registration error:', error);
+      return errorResponse(res, 'Failed to create user', 500);
     }
 
-    console.log('✅ User created successfully:', user.id);
-
     // Generate token
-    console.log('🎫 Generating JWT token...');
     const token = generateToken(user.id, user.role);
 
     // Remove password from response
     delete user.password;
 
-    console.log('✅ Registration completed successfully');
     return successResponse(
       res,
       {
@@ -87,9 +63,8 @@ export const register = async (req, res) => {
       201
     );
   } catch (error) {
-    console.error('❌ Unexpected registration error:', error);
-    console.error('Error stack:', error.stack);
-    return errorResponse(res, `Registration failed: ${error.message}`, 500);
+    console.error('Register error:', error);
+    return errorResponse(res, 'Registration failed', 500);
   }
 };
 

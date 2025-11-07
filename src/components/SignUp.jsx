@@ -117,16 +117,13 @@ const SignUp = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    if (!validateForm()) {
-      return;
-    }
+    if (!validateForm()) return;
 
-    setIsSubmitting(true);
-    
     try {
-      // Prepare data for API
-      const registrationData = {
+      // Determine API base (use Vite env if available, otherwise default to localhost:5000)
+      const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+
+      const payload = {
         fullName: formData.fullName,
         email: formData.email,
         password: formData.password,
@@ -134,26 +131,37 @@ const SignUp = () => {
         location: formData.location
       };
 
-      // Call register function from AuthContext
-      const result = await register(registrationData);
-      
-      if (result.success) {
-        // Show success message
-        alert('Registration successful! Welcome to Cleanup Nairobi!');
-        
-        // Navigate to dashboard
-        navigate('/dashboard');
-      } else {
-        // Show error message
-        setErrors({ submit: result.error || 'Registration failed. Please try again.' });
-        alert(result.error || 'Registration failed. Please try again.');
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Show server validation or error message
+        const message = (data && data.message) || 'Registration failed';
+        setErrors({ form: message });
+        return;
       }
-    } catch (error) {
-      console.error('Registration error:', error);
-      setErrors({ submit: 'An unexpected error occurred. Please try again.' });
-      alert('An unexpected error occurred. Please try again.');
-    } finally {
-      setIsSubmitting(false);
+
+      // Successful registration: store token and user
+      if (data && data.data) {
+        const { token, user } = data.data;
+        if (token) localStorage.setItem('token', token);
+        if (user) {
+          localStorage.setItem('userName', user.full_name || user.fullName || '');
+          localStorage.setItem('userEmail', user.email || '');
+          localStorage.setItem('userLocation', user.location || '');
+        }
+      }
+
+      alert('Registration successful! Redirecting to dashboard...');
+      navigate('/dashboard');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setErrors({ form: 'Registration failed. Please try again.' });
     }
   };
 

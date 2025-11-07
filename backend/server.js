@@ -14,7 +14,6 @@ import adminRoutes from './routes/adminRoutes.js';
 // Load environment variables
 dotenv.config();
 
-// Initialize express app
 const app = express();
 
 // Middleware
@@ -48,27 +47,40 @@ app.use(notFound);
 // Error handler
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
+// ---- START SERVER ----
+const DEFAULT_PORT = Number(process.env.PORT) || 5001;
 
-app.listen(PORT, () => {
-  console.log(`
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`
 ╔═══════════════════════════════════════════════════════╗
 ║                                                       ║
-║    Cleanup Nairobi API Server                      ║
+║        Cleanup Nairobi API Server Running             ║
 ║                                                       ║
-║   Server running on port ${PORT}                        ║
-║   Environment: ${process.env.NODE_ENV || 'development'}                      ║
-║   Time: ${new Date().toLocaleString()}               ║
+║   ➤ Port: ${port}                                     ║
+║   ➤ Environment: ${process.env.NODE_ENV || 'development'}   ║
+║   ➤ Started: ${new Date().toLocaleString()}           ║
 ║                                                       ║
 ╚═══════════════════════════════════════════════════════╝
-  `);
-});
+    `);
+  });
+
+  server.on('error', (err) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`⚠️  Port ${port} in use, trying port ${port + 1}...`);
+      startServer(port + 1);
+    } else {
+      console.error('❌ Server error:', err);
+      process.exit(1);
+    }
+  });
+};
+
+startServer(DEFAULT_PORT);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
   console.error('Unhandled Promise Rejection:', err);
-  // Close server & exit process
   process.exit(1);
 });
 
