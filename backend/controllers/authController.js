@@ -1,18 +1,22 @@
-import { supabase } from '../config/supabase.js';
+import { supabase, supabaseAdmin } from '../config/supabase.js';
 import { TABLES, USER_ROLES } from '../config/database.js';
 import { hashPassword, comparePassword, generateToken, successResponse, errorResponse } from '../utils/helpers.js';
 
-// Register new user
 export const register = async (req, res) => {
   try {
     const { fullName, email, password, phone, location, role = USER_ROLES.USER } = req.body;
 
-    // Check if user already exists
-    const { data: existingUser } = await supabase
+    // Check if user already exists using admin client (server-side)
+    const { data: existingUser, error: existingError } = await supabaseAdmin
       .from(TABLES.USERS)
       .select('id')
       .eq('email', email)
-      .single();
+      .maybeSingle();
+
+    if (existingError) {
+      console.error('Error checking existing user:', existingError);
+      return errorResponse(res, 'Failed to validate user', 500);
+    }
 
     if (existingUser) {
       return errorResponse(res, 'User with this email already exists', 409);
@@ -21,8 +25,8 @@ export const register = async (req, res) => {
     // Hash password
     const hashedPassword = await hashPassword(password);
 
-    // Create user
-    const { data: user, error } = await supabase
+    // Create user using admin client to ensure insert succeeds regardless of RLS
+    const { data: user, error } = await supabaseAdmin
       .from(TABLES.USERS)
       .insert([
         {
@@ -36,7 +40,7 @@ export const register = async (req, res) => {
         }
       ])
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) {
       console.error('Registration error:', error);

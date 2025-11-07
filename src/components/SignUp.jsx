@@ -112,22 +112,53 @@ const SignUp = () => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (validateForm()) {
-      console.log('Form submitted:', formData);
-      
-      // Store user data in localStorage
-      localStorage.setItem('token', 'demo-token-' + Date.now());
-      localStorage.setItem('userName', formData.fullName);
-      localStorage.setItem('userEmail', formData.email);
-      localStorage.setItem('userLocation', formData.location);
-      
-      // Show success message
+    if (!validateForm()) return;
+
+    try {
+      // Determine API base (use Vite env if available, otherwise default to localhost:5000)
+      const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+
+      const payload = {
+        fullName: formData.fullName,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        location: formData.location
+      };
+
+      const res = await fetch(`${API_BASE}/api/auth/register`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Show server validation or error message
+        const message = (data && data.message) || 'Registration failed';
+        setErrors({ form: message });
+        return;
+      }
+
+      // Successful registration: store token and user
+      if (data && data.data) {
+        const { token, user } = data.data;
+        if (token) localStorage.setItem('token', token);
+        if (user) {
+          localStorage.setItem('userName', user.full_name || user.fullName || '');
+          localStorage.setItem('userEmail', user.email || '');
+          localStorage.setItem('userLocation', user.location || '');
+        }
+      }
+
       alert('Registration successful! Redirecting to dashboard...');
-      
-      // Navigate to dashboard
       navigate('/dashboard');
+    } catch (err) {
+      console.error('Registration error:', err);
+      setErrors({ form: 'Registration failed. Please try again.' });
     }
   };
 

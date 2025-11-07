@@ -5,23 +5,52 @@ import { X } from 'lucide-react';
 const Login = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const navigate = useNavigate();
 
-  const handleLogin = () => {
-    // Check for demo credentials
-    if (email === 'user@gmail.com' && password === '123456') {
-      // Store user data in localStorage
-      localStorage.setItem('token', 'demo-token-123');
-      localStorage.setItem('userName', 'Demo User');
-      localStorage.setItem('userEmail', email);
-      
-      // Navigate to dashboard
+  const handleLogin = async () => {
+    setError('');
+    if (!email || !password) {
+      setError('Please enter email and password');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const API_BASE = import.meta.env.VITE_API_URL || `${window.location.protocol}//${window.location.hostname}:5000`;
+
+      const res = await fetch(`${API_BASE}/api/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError((data && data.message) || 'Login failed');
+        setLoading(false);
+        return;
+      }
+
+      // success
+      if (data && data.data) {
+        const { token, user } = data.data;
+        if (token) localStorage.setItem('token', token);
+        if (user) {
+          localStorage.setItem('userName', user.full_name || user.fullName || '');
+          localStorage.setItem('userEmail', user.email || '');
+        }
+      }
+
+      setLoading(false);
       navigate('/dashboard');
-      
-      // Close modal if needed
       if (onClose) onClose();
-    } else {
-      alert('Invalid credentials. Use: user@gmail.com / 123456');
+    } catch (err) {
+      console.error('Login error', err);
+      setError('Unable to contact server. Please try again.');
+      setLoading(false);
     }
   };
   if (!isOpen) return null;

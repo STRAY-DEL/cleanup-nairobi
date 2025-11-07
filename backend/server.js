@@ -17,6 +17,7 @@ dotenv.config();
 // Initialize express app
 const app = express();
 
+
 // Middleware
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || '*',
@@ -48,22 +49,28 @@ app.use(notFound);
 // Error handler
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || 5000;
+// Start server with automatic fallback if port is in use
+const DEFAULT_PORT = Number(process.env.PORT) || 5000;
 
-app.listen(PORT, () => {
-  console.log(`
-╔═══════════════════════════════════════════════════════╗
-║                                                       ║
-║   🌿 Cleanup Nairobi API Server                      ║
-║                                                       ║
-║   Server running on port ${PORT}                        ║
-║   Environment: ${process.env.NODE_ENV || 'development'}                      ║
-║   Time: ${new Date().toLocaleString()}               ║
-║                                                       ║
-╚═══════════════════════════════════════════════════════╝
-  `);
-});
+const startServer = (port) => {
+  const server = app.listen(port, () => {
+    console.log(`\nServer running on port ${port} (env: ${process.env.NODE_ENV || 'development'})`);
+    console.log(`Started at: ${new Date().toLocaleString()}`);
+  });
+
+  server.on('error', (err) => {
+    if (err && err.code === 'EADDRINUSE') {
+      console.warn(`Port ${port} in use, trying port ${port + 1}...`);
+      // try next port
+      startServer(port + 1);
+    } else {
+      console.error('Server error:', err);
+      process.exit(1);
+    }
+  });
+};
+
+startServer(DEFAULT_PORT);
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
