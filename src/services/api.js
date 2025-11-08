@@ -1,5 +1,5 @@
 // API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api';
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
@@ -149,8 +149,46 @@ export const reportsAPI = {
   },
 };
 
+// User Management API
+export const userAPI = {
+  getAllUsers: async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const response = await fetch(`${API_BASE_URL}/admin/users?${queryString}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  getUserById: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+      method: 'GET',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+
+  updateUserRole: async (id, roleData) => {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${id}/role`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(roleData),
+    });
+    return handleResponse(response);
+  },
+
+  deleteUser: async (id) => {
+    const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+      method: 'DELETE',
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(response);
+  },
+};
+
 export default {
   authAPI,
   eventsAPI,
   reportsAPI,
+  userAPI,
 };

@@ -6,7 +6,7 @@ import { FaTachometerAlt, FaUser, FaBox, FaChartBar, FaCog } from 'react-icons/f
 const Sidebar = () => {
   return (
     <aside className="bg-gray-900 text-white w-64 min-h-screen p-4">
-      <div className="text-2xl font-bold mb-10">EcoDash</div>
+      <div className="text-2xl font-bold mb-10">CleanUp Nairobi</div>
       <nav>
         <ul>
           <li>
