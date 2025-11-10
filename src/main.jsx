@@ -5,12 +5,15 @@ import './index.css';
 import 'leaflet/dist/leaflet.css';
 import App from './App.jsx'
 import { AuthProvider } from './context/AuthContext';
+import { ModalProvider } from './context/ModalContext';
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <App />
+        <ModalProvider>
+          <App />
+        </ModalProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

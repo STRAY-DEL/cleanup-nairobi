@@ -16,41 +16,34 @@ export const authenticate = async (req, res, next) => {
 
     const token = authHeader.substring(7);
 
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    // Verify token with Supabase
+    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
 
-    // Get user from database
-    const { data: user, error } = await supabase
+    if (userError || !user) {
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid token'
+      });
+    }
+
+    // Get user profile from our custom users table
+    const { data: profile, error: profileError } = await supabase
       .from(TABLES.USERS)
       .select('*')
-      .eq('id', decoded.userId)
+      .eq('id', user.id)
       .single();
 
-    if (error || !user) {
+    if (profileError || !profile) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token'
+        message: 'User profile not found'
       });
     }
 
-    // Attach user to request
-    req.user = user;
+    // Attach user profile to request
+    req.user = profile;
     next();
   } catch (error) {
-    if (error.name === 'JsonWebTokenError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Invalid token'
-      });
-    }
-
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Token expired'
-      });
-    }
-
     return res.status(500).json({
       success: false,
       message: 'Authentication error',

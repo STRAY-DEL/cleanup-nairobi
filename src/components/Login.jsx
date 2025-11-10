@@ -32,8 +32,14 @@ const Login = ({ isOpen, onClose }) => {
         // Close modal if needed
         if (onClose) onClose();
         
-        // Navigate to dashboard
-        navigate('/dashboard');
+        // Navigate to appropriate dashboard based on user role
+        if (result.user && result.user.role === 'Admin') {
+          navigate('/admin/dashboard');
+        } else if (result.user && result.user.role === 'Driver') {
+          navigate('/driver/dashboard');
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         setError(result.error || 'Invalid email or password');
       }

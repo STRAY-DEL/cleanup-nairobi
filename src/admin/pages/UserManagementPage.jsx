@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import StatCard from '../components/StatCard';
-import { Users, UserCheck, UserX, UserPlus, MoreVertical, Edit, Trash2 } from 'lucide-react';
+import { Users, UserCheck, UserX, UserPlus, MoreVertical, Edit, Trash2, Truck } from 'lucide-react';
 import UserDetailModal from '../components/UserDetailModal';
 import UserForm from '../components/UserForm';
 import { userAPI, authAPI } from '../../services/api';
@@ -15,6 +15,7 @@ const UserManagementPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [activeTab, setActiveTab] = useState('All');
 
   const fetchUsers = async () => {
     try {
@@ -47,6 +48,12 @@ const UserManagementPage = () => {
     setIsUserFormOpen(true);
     setSelectedUser(null);
   };
+  
+  const handlePromoteToDriver = (user) => {
+    setEditingUser({ ...user, role: 'Driver' });
+    setIsUserFormOpen(true);
+    setSelectedUser(null);
+  };
 
   const handleCloseUserForm = () => {
     setIsUserFormOpen(false);
@@ -56,7 +63,6 @@ const UserManagementPage = () => {
   const handleCreateOrUpdateUser = async (userData) => {
     try {
       if (editingUser) {
-        // Assuming update user role is the only editable field for now
         await userAPI.updateUserRole(editingUser.id, { role: userData.role });
         toast.success('User updated successfully!');
       } else {
@@ -86,8 +92,9 @@ const UserManagementPage = () => {
   const totalUsers = pagination ? pagination.total : 0;
   const activeUsers = users.filter(user => user.status === 'Active').length;
   const blockedUsers = users.filter(user => user.status === 'Blocked').length;
-  // This would require a 'createdAt' field and logic to compare against the current month
-  const newThisMonth = 0; 
+  const drivers = users.filter(user => user.role === 'Driver').length;
+
+  const filteredUsers = activeTab === 'All' ? users : users.filter(user => user.role === 'Driver');
 
   if (loading) return <div className="text-center py-8">Loading users...</div>;
   if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
@@ -121,69 +128,57 @@ const UserManagementPage = () => {
           value={activeUsers}
         />
         <StatCard
+          icon={<Truck size={24} className="text-purple-500" />}
+          title="Drivers"
+          value={drivers}
+        />
+        <StatCard
           icon={<UserX size={24} className="text-red-500" />}
           title="Blocked Users"
           value={blockedUsers}
         />
-        <StatCard
-          icon={<UserPlus size={24} className="text-yellow-500" />}
-          title="New This Month"
-          value={newThisMonth}
-        />
       </div>
 
       <div className="bg-white p-6 rounded-lg shadow-md">
-        <div className="flex flex-col md:flex-row justify-between items-center mb-4 gap-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <select className="border border-gray-300 rounded-md px-3 py-2">
-              <option>All Roles</option>
-              <option>Citizen</option>
-              <option>Operator</option>
-              <option>Manager</option>
-              <option>Admin</option>
-            </select>
-            <select className="border border-gray-300 rounded-md px-3 py-2">
-              <option>All Statuses</option>
-              <option>Active</option>
-              <option>Inactive</option>
-              <option>Blocked</option>
-            </select>
-            <input
-              type="text"
-              placeholder="Search..."
-              className="border border-gray-300 rounded-md px-3 py-2"
-            />
-          </div>
-          <select className="border border-gray-300 rounded-md px-3 py-2">
-            <option>Sort by Name</option>
-            <option>Sort by Created date</option>
-            <option>Sort by Last active</option>
-          </select>
+        <div className="border-b border-gray-200">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              onClick={() => setActiveTab('All')}
+              className={`${
+                activeTab === 'All'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              All Users
+            </button>
+            <button
+              onClick={() => setActiveTab('Drivers')}
+              className={`${
+                activeTab === 'Drivers'
+                  ? 'border-green-500 text-green-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
+            >
+              Drivers
+            </button>
+          </nav>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto mt-4">
           <table className="w-full min-w-[800px]">
             <thead>
               <tr className="bg-gray-100">
-                <th className="p-3 text-left">
-                  <input type="checkbox" />
-                </th>
                 <th className="p-3 text-left">User</th>
                 <th className="p-3 text-left">Contact</th>
                 <th className="p-3 text-left">Role</th>
-                <th className="p-3 text-left">Zone</th>
                 <th className="p-3 text-left">Status</th>
-                <th className="p-3 text-left">Reports</th>
-                <th className="p-3 text-left">Last Active</th>
                 <th className="p-3 text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
-              {users.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="border-b">
-                  <td className="p-3">
-                    <input type="checkbox" />
-                  </td>
                   <td className="p-3 flex items-center">
                     <img
                       src={user.avatar || 'https://i.pravatar.cc/150?u=' + user.id}
@@ -201,6 +196,8 @@ const UserManagementPage = () => {
                       className={`px-2 py-1 rounded-full text-sm ${
                         user.role === 'Admin'
                           ? 'bg-red-200 text-red-800'
+                          : user.role === 'Driver'
+                          ? 'bg-purple-200 text-purple-800'
                           : user.role === 'Operator'
                           ? 'bg-blue-200 text-blue-800'
                           : 'bg-green-200 text-green-800'
@@ -209,7 +206,6 @@ const UserManagementPage = () => {
                       {user.role}
                     </span>
                   </td>
-                  <td className="p-3">{user.zone || 'N/A'}</td>
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-sm ${
@@ -221,27 +217,37 @@ const UserManagementPage = () => {
                       {user.status || 'N/A'}
                     </span>
                   </td>
-                  <td className="p-3">{user.reportsSubmitted || 0}</td>
-                  <td className="p-3">{user.lastLogin ? new Date(user.lastLogin).toLocaleString() : 'Never'}</td>
                   <td className="p-3">
                     <div className="relative flex items-center space-x-2">
-                      <button
-                        className="p-2 rounded-full hover:bg-gray-200"
-                        onClick={() => handleViewUser(user)}
-                      >
-                        <MoreVertical size={20} />
-                      </button>
+                      {user.role !== 'Driver' && (
+                        <button
+                          className="p-2 rounded-full hover:bg-gray-200 text-purple-600"
+                          onClick={() => handlePromoteToDriver(user)}
+                          title="Promote to Driver"
+                        >
+                          <Truck size={20} />
+                        </button>
+                      )}
                       <button
                         className="p-2 rounded-full hover:bg-gray-200"
                         onClick={() => handleOpenUserForm(user)}
+                        title="Edit User"
                       >
                         <Edit size={20} />
                       </button>
                       <button
                         className="p-2 rounded-full hover:bg-gray-200 text-red-600"
                         onClick={() => handleDeleteUser(user.id)}
+                        title="Delete User"
                       >
                         <Trash2 size={20} />
+                      </button>
+                      <button
+                        className="p-2 rounded-full hover:bg-gray-200"
+                        onClick={() => handleViewUser(user)}
+                        title="View Details"
+                      >
+                        <MoreVertical size={20} />
                       </button>
                     </div>
                   </td>

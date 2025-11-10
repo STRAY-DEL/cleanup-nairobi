@@ -1,17 +1,36 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
 import { Home, BarChart3, Calendar, Users, Truck, MapPin, PieChart, Bell, Settings, FileText, ChevronLeft, ChevronRight, Search, Sun, Moon, Menu, X } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const { user, loading } = useAuth();
 
   useEffect(() => {
     // Close mobile menu on route change
     setIsMobileMenuOpen(false);
   }, [location]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-2xl font-semibold">Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    // This case should now be handled by ProtectedContent in App.jsx
+    return null;
+  }
+
+  if (user.role !== 'Admin') {
+    return <Navigate to="/dashboard" />;
+  }
 
   const navItems = [
     { to: '/admin/dashboard', icon: <Home size={20} />, text: 'Dashboard' },

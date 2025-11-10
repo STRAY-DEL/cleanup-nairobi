@@ -14,6 +14,7 @@
   "dependencies": {
     "@microlink/react-json-view": "^1.27.0",
     "framer-motion": "^10.16.4",
+    "jwt-decode": "^4.0.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.290.0",
     "moment": "^2.30.1",

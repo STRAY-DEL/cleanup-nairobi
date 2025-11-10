@@ -97,8 +97,23 @@ export const getAllUsers = async (req, res) => {
       return errorResponse(res, 'Failed to get users', 500);
     }
 
+    const formattedUsers = users.map(user => ({
+      id: user.id,
+      fullName: user.full_name,
+      email: user.email,
+      phone: user.phone,
+      location: user.location,
+      role: user.role,
+      avatar: user.avatar_url,
+      points: user.points,
+      createdAt: user.created_at,
+      status: 'Active', // Mock data
+      reportsSubmitted: Math.floor(Math.random() * 20), // Mock data
+      lastLogin: new Date(Date.now() - Math.random() * 10000000000).toISOString(), // Mock data
+    }));
+
     return successResponse(res, {
-      users,
+      users: formattedUsers,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),

@@ -11,6 +11,8 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
     password: '',
     confirmPassword: '',
     sendWelcomeEmail: false,
+    vehicleId: '',
+    routeId: '',
   });
 
   useEffect(() => {
@@ -23,7 +25,9 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
         zone: user.zone || '',
         password: '', // Password is not pre-filled for security
         confirmPassword: '',
-        sendWelcomeEmail: false, // This should probably not be pre-filled either
+        sendWelcomeEmail: false,
+        vehicleId: user.vehicleId || '',
+        routeId: user.routeId || '',
       });
     }
   }, [user]);
@@ -46,12 +50,12 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-lg">
         <div className="p-6 border-b">
           <h2 className="text-2xl font-bold">{user ? 'Edit User' : 'Create User'}</h2>
         </div>
-        <form onSubmit={handleSubmit} className="p-6">
+        <form onSubmit={handleSubmit} className="p-6 max-h-[80vh] overflow-y-auto">
           <div className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">Full Name</label>
@@ -94,11 +98,44 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
               >
                 <option>Citizen</option>
+                <option>Driver</option>
                 <option>Operator</option>
                 <option>Manager</option>
                 <option>Admin</option>
               </select>
             </div>
+            {formData.role === 'Driver' && (
+              <>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Assign Vehicle</label>
+                  <select
+                    name="vehicleId"
+                    value={formData.vehicleId}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  >
+                    <option value="">Select a vehicle</option>
+                    {/* This should be populated with actual vehicle data */}
+                    <option value="1">KDE 359Z - Mercedes-Benz Actros</option>
+                    <option value="2">KCF 123Y - Isuzu F-Series</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Assign Route</label>
+                  <select
+                    name="routeId"
+                    value={formData.routeId}
+                    onChange={handleChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                  >
+                    <option value="">Select a route</option>
+                    {/* This should be populated with actual route data */}
+                    <option value="1">Westlands Route</option>
+                    <option value="2">Kilimani Route</option>
+                  </select>
+                </div>
+              </>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700">Zone</label>
               <input
