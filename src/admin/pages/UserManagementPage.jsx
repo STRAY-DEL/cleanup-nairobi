@@ -1,11 +1,19 @@
-
-import React, { useState, useEffect } from 'react';
-import StatCard from '../components/StatCard';
-import { Users, UserCheck, UserX, UserPlus, MoreVertical, Edit, Trash2, Truck } from 'lucide-react';
-import UserDetailModal from '../components/UserDetailModal';
-import UserForm from '../components/UserForm';
-import { userAPI, authAPI } from '../../services/api';
-import toast from 'react-hot-toast';
+import React, { useState, useEffect } from "react";
+import StatCard from "../components/StatCard";
+import {
+  Users,
+  UserCheck,
+  UserX,
+  UserPlus,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Truck,
+} from "lucide-react";
+import UserDetailModal from "../components/UserDetailModal";
+import UserForm from "../components/UserForm";
+import { userAPI, authAPI } from "../../services/api";
+import toast from "react-hot-toast";
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -15,19 +23,34 @@ const UserManagementPage = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('All');
+  const [activeTab, setActiveTab] = useState("All");
 
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const data = await userAPI.getAllUsers();
-      setUsers(data.users);
-      setPagination(data.pagination);
+      setError(null);
+      console.log("Fetching users..."); // Debug log
+      const response = await userAPI.getAllUsers();
+      console.log("Full API Response:", response); // Debug log
+      console.log("Response data:", response.data); // Debug log
+
+      if (response && response.data) {
+        setUsers(response.data.users || []);
+        setPagination(response.data.pagination || null);
+        console.log("Users set:", response.data.users); // Debug log
+      } else {
+        console.warn("Unexpected response structure:", response);
+        setUsers([]);
+        setPagination(null);
+      }
       setLoading(false);
     } catch (err) {
+      console.error("Fetch users error:", err); // Debug log
+      console.error("Error details:", err.message, err.stack); // More debug info
       setError(err.message);
+      setUsers([]); // Ensure users is always an array
       setLoading(false);
-      toast.error('Failed to fetch users.');
+      toast.error(`Failed to fetch users: ${err.message}`);
     }
   };
 
@@ -48,9 +71,9 @@ const UserManagementPage = () => {
     setIsUserFormOpen(true);
     setSelectedUser(null);
   };
-  
+
   const handlePromoteToDriver = (user) => {
-    setEditingUser({ ...user, role: 'Driver' });
+    setEditingUser({ ...user, role: "Driver" });
     setIsUserFormOpen(true);
     setSelectedUser(null);
   };
@@ -64,25 +87,39 @@ const UserManagementPage = () => {
     try {
       if (editingUser) {
         await userAPI.updateUserRole(editingUser.id, { role: userData.role });
-        toast.success('User updated successfully!');
+        toast.success("User updated successfully!");
       } else {
-        await authAPI.register(userData);
-        toast.success('User created successfully!');
+        // Transform form data to match backend API expectations
+        const registrationData = {
+          fullName: userData.fullName,
+          email: userData.email,
+          password: userData.password,
+          phone: userData.phone,
+          location: userData.zone || 'Nairobi', // Map zone to location with default
+          role: userData.role?.toLowerCase() || 'user' // Convert to lowercase for backend
+        };
+        
+        console.log('Sending registration data:', registrationData); // Debug log
+        await authAPI.register(registrationData);
+        toast.success("User created successfully!");
       }
       fetchUsers();
     } catch (err) {
-      toast.error(`Failed to ${editingUser ? 'update' : 'create'} user: ${err.message}`);
+      console.error('Registration error:', err); // Debug log
+      toast.error(
+        `Failed to ${editingUser ? "update" : "create"} user: ${err.message}`
+      );
     } finally {
       handleCloseUserForm();
     }
   };
 
   const handleDeleteUser = async (userId) => {
-    if (window.confirm('Are you sure you want to delete this user?')) {
+    if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         await userAPI.deleteUser(userId);
         fetchUsers();
-        toast.success('User deleted successfully!');
+        toast.success("User deleted successfully!");
       } catch (err) {
         toast.error(`Failed to delete user: ${err.message}`);
       }
@@ -90,14 +127,25 @@ const UserManagementPage = () => {
   };
 
   const totalUsers = pagination ? pagination.total : 0;
-  const activeUsers = users.filter(user => user.status === 'Active').length;
-  const blockedUsers = users.filter(user => user.status === 'Blocked').length;
-  const drivers = users.filter(user => user.role === 'Driver').length;
+  const activeUsers = Array.isArray(users)
+    ? users.filter((user) => user.status === "Active").length
+    : 0;
+  const blockedUsers = Array.isArray(users)
+    ? users.filter((user) => user.status === "Blocked").length
+    : 0;
+  const drivers = Array.isArray(users)
+    ? users.filter((user) => user.role === "driver").length
+    : 0;
 
-  const filteredUsers = activeTab === 'All' ? users : users.filter(user => user.role === 'Driver');
+  const filteredUsers = Array.isArray(users)
+    ? activeTab === "All"
+      ? users
+      : users.filter((user) => user.role === "driver")
+    : [];
 
   if (loading) return <div className="text-center py-8">Loading users...</div>;
-  if (error) return <div className="text-center py-8 text-red-500">Error: {error}</div>;
+  if (error)
+    return <div className="text-center py-8 text-red-500">Error: {error}</div>;
 
   return (
     <div>
@@ -143,21 +191,21 @@ const UserManagementPage = () => {
         <div className="border-b border-gray-200">
           <nav className="-mb-px flex space-x-8" aria-label="Tabs">
             <button
-              onClick={() => setActiveTab('All')}
+              onClick={() => setActiveTab("All")}
               className={`${
-                activeTab === 'All'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "All"
+                  ? "border-green-500 text-green-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               All Users
             </button>
             <button
-              onClick={() => setActiveTab('Drivers')}
+              onClick={() => setActiveTab("Drivers")}
               className={`${
-                activeTab === 'Drivers'
-                  ? 'border-green-500 text-green-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                activeTab === "Drivers"
+                  ? "border-green-500 text-green-600"
+                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
               } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm`}
             >
               Drivers
@@ -181,7 +229,9 @@ const UserManagementPage = () => {
                 <tr key={user.id} className="border-b">
                   <td className="p-3 flex items-center">
                     <img
-                      src={user.avatar || 'https://i.pravatar.cc/150?u=' + user.id}
+                      src={
+                        user.avatar || "https://i.pravatar.cc/150?u=" + user.id
+                      }
                       alt={user.fullName}
                       className="w-10 h-10 rounded-full mr-4"
                     />
@@ -194,13 +244,13 @@ const UserManagementPage = () => {
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-sm ${
-                        user.role === 'Admin'
-                          ? 'bg-red-200 text-red-800'
-                          : user.role === 'Driver'
-                          ? 'bg-purple-200 text-purple-800'
-                          : user.role === 'Operator'
-                          ? 'bg-blue-200 text-blue-800'
-                          : 'bg-green-200 text-green-800'
+                        user.role === "admin"
+                          ? "bg-red-200 text-red-800"
+                          : user.role === "driver"
+                          ? "bg-purple-200 text-purple-800"
+                          : user.role === "Operator"
+                          ? "bg-blue-200 text-blue-800"
+                          : "bg-green-200 text-green-800"
                       }`}
                     >
                       {user.role}
@@ -209,17 +259,17 @@ const UserManagementPage = () => {
                   <td className="p-3">
                     <span
                       className={`px-2 py-1 rounded-full text-sm ${
-                        user.status === 'Active'
-                          ? 'bg-green-200 text-green-800'
-                          : 'bg-red-200 text-red-800'
+                        user.status === "Active"
+                          ? "bg-green-200 text-green-800"
+                          : "bg-red-200 text-red-800"
                       }`}
                     >
-                      {user.status || 'N/A'}
+                      {user.status || "N/A"}
                     </span>
                   </td>
                   <td className="p-3">
                     <div className="relative flex items-center space-x-2">
-                      {user.role !== 'Driver' && (
+                      {user.role !== "Driver" && (
                         <button
                           className="p-2 rounded-full hover:bg-gray-200 text-purple-600"
                           onClick={() => handlePromoteToDriver(user)}

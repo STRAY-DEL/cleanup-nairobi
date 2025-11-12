@@ -29,15 +29,23 @@ const Login = ({ isOpen, onClose }) => {
       const result = await login({ email, password });
       
       if (result.success) {
+        // Debug: Log user role to see what we're working with
+        console.log('Login - User object:', result.user);
+        console.log('Login - User role:', result.user?.role);
+        console.log('Login - Role type:', typeof result.user?.role);
+        
         // Close modal if needed
         if (onClose) onClose();
         
         // Navigate to appropriate dashboard based on user role
         if (result.user && result.user.role === 'Admin') {
+          console.log('Navigating to admin dashboard');
           navigate('/admin/dashboard');
         } else if (result.user && result.user.role === 'Driver') {
+          console.log('Navigating to driver dashboard');
           navigate('/driver/dashboard');
         } else {
+          console.log('Navigating to user dashboard');
           navigate('/dashboard');
         }
       } else {

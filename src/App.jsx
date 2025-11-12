@@ -21,7 +21,10 @@ import SettingsPage from './admin/pages/SettingsPage';
 import AuditLogsPage from './admin/pages/AuditLogsPage';
 import NotificationsPage from './admin/pages/NotificationsPage';
 import AnalyticsPage from './admin/pages/AnalyticsPage';
-import DriverDashboard from './components/driver/DriverDashboard';
+import DriverLayout from './components/driver/layouts/DriverLayout';
+import DriverDashboard from './components/driver/pages/DashboardPage';
+import TasksPage from './components/driver/pages/TasksPage';
+import RoutesPage from './components/driver/pages/RoutesPage';
 
 import UserManagementPage from './admin/pages/UserManagementPage';
 import { Toaster } from 'react-hot-toast';
@@ -29,21 +32,14 @@ import { Toaster } from 'react-hot-toast';
 // Component to handle authentication for protected routes
 const ProtectedContent = ({ children, requiredRole = null }) => {
   const { user, loading } = useAuth();
-  const { openLoginModal } = useModal();
-
-  useEffect(() => {
-    if (!loading && !user) {
-      openLoginModal();
-    }
-  }, [user, loading, openLoginModal]);
 
   if (loading) {
     return <div className="flex items-center justify-center h-screen">Loading...</div>;
   }
 
   if (!user) {
-    // Display a placeholder while modal is being shown
-    return <div className="flex items-center justify-center h-screen">Checking authentication...</div>;
+    // Redirect to landing page instead of opening login modal
+    return <Navigate to="/" replace />;
   }
 
   if (requiredRole && user.role !== requiredRole) {
@@ -98,7 +94,20 @@ function App() {
           <Route path="analytics" element={<AnalyticsPage />} />
         </Route>
 
-        <Route path="/driver/dashboard" element={<DriverDashboard />} />
+        <Route path="/driver" element={
+          <ProtectedContent requiredRole="Driver">
+            <DriverLayout />
+          </ProtectedContent>
+        }>
+          <Route index element={<Navigate to="dashboard" />} />
+          <Route path="dashboard" element={<DriverDashboard />} />
+          <Route path="tasks" element={<TasksPage />} />
+          <Route path="routes" element={<RoutesPage />} />
+          <Route path="reports" element={<div className="p-8 text-center text-gray-500">Reports page coming soon...</div>} />
+          <Route path="vehicle" element={<div className="p-8 text-center text-gray-500">Vehicle page coming soon...</div>} />
+          <Route path="support" element={<div className="p-8 text-center text-gray-500">Support page coming soon...</div>} />
+          <Route path="settings" element={<div className="p-8 text-center text-gray-500">Settings page coming soon...</div>} />
+        </Route>
 
         <Route path="/dashboard" element={
           <ProtectedContent>

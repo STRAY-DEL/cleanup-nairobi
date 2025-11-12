@@ -1,19 +1,45 @@
 
 import React, { useState, useEffect } from 'react';
-import { Link, Outlet, useLocation, Navigate } from 'react-router-dom';
-import { Home, BarChart3, Calendar, Users, Truck, MapPin, PieChart, Bell, Settings, FileText, ChevronLeft, ChevronRight, Search, Sun, Moon, Menu, X } from 'lucide-react';
+import { Link, Outlet, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { Home, BarChart3, Calendar, Users, Truck, MapPin, PieChart, Bell, Settings, FileText, ChevronLeft, ChevronRight, Search, Sun, Menu, X, User, LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 
 const AdminLayout = () => {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const location = useLocation();
-  const { user, loading } = useAuth();
+  const navigate = useNavigate();
+  const { user, loading, logout } = useAuth();
 
   useEffect(() => {
     // Close mobile menu on route change
     setIsMobileMenuOpen(false);
+    setIsUserMenuOpen(false);
   }, [location]);
+
+  // Debug: Log user role to see what we're working with
+  useEffect(() => {
+    if (user) {
+      console.log('AdminLayout - User object:', user);
+      console.log('AdminLayout - User role:', user.role);
+      console.log('AdminLayout - Role type:', typeof user.role);
+    }
+  }, [user]);
+
+  // Close user menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest('.user-menu-container')) {
+        setIsUserMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
 
   if (loading) {
     return (
@@ -31,6 +57,13 @@ const AdminLayout = () => {
   if (user.role !== 'Admin') {
     return <Navigate to="/dashboard" />;
   }
+
+  const handleLogout = () => {
+    logout();
+    setIsUserMenuOpen(false);
+    // Explicitly navigate to landing page after logout
+    navigate('/', { replace: true });
+  };
 
   const navItems = [
     { to: '/admin/dashboard', icon: <Home size={20} />, text: 'Dashboard' },
@@ -115,8 +148,53 @@ const AdminLayout = () => {
             <button className="p-2 rounded-full hover:bg-gray-100 ml-2">
               <Bell size={20} />
             </button>
-            <div className="ml-4">
-              <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="User" className="w-8 h-8 rounded-full" />
+            
+            {/* User Menu Dropdown */}
+            <div className="relative ml-4 user-menu-container">
+              <button
+                onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100 transition-colors"
+              >
+                <img 
+                  src={user.avatar_url || `https://i.pravatar.cc/150?u=${user.id}`} 
+                  alt={user.full_name || 'Admin'} 
+                  className="w-8 h-8 rounded-full" 
+                />
+                <div className="hidden md:block text-left">
+                  <div className="text-sm font-medium text-gray-700">{user.full_name || 'Admin User'}</div>
+                  <div className="text-xs text-gray-500">{user.role}</div>
+                </div>
+                <ChevronDown size={16} className="text-gray-400" />
+              </button>
+
+              {/* Dropdown Menu */}
+              {isUserMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                  <div className="px-4 py-3 border-b border-gray-100">
+                    <div className="text-sm font-medium text-gray-900">{user.full_name || 'Admin User'}</div>
+                    <div className="text-sm text-gray-500">{user.email}</div>
+                  </div>
+                  
+                  <button
+                    onClick={() => {
+                      setIsUserMenuOpen(false);
+                      // Navigate to profile or settings if needed
+                    }}
+                    className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 flex items-center"
+                  >
+                    <User size={16} className="mr-3" />
+                    Profile Settings
+                  </button>
+                  
+                  <button
+                    onClick={handleLogout}
+                    className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center"
+                  >
+                    <LogOut size={16} className="mr-3" />
+                    Sign Out
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </header>

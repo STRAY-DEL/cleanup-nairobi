@@ -1,25 +1,38 @@
-import { supabase, supabaseAdmin } from '../config/supabase.js';
-import { TABLES, USER_ROLES } from '../config/database.js';
-import { hashPassword, comparePassword, generateToken, successResponse, errorResponse } from '../utils/helpers.js';
+import { supabase, supabaseAdmin } from "../config/supabase.js";
+import { TABLES, USER_ROLES } from "../config/database.js";
+import {
+  hashPassword,
+  comparePassword,
+  generateToken,
+  successResponse,
+  errorResponse,
+} from "../utils/helpers.js";
 
 export const register = async (req, res) => {
   try {
-    const { fullName, email, password, phone, location, role = USER_ROLES.USER } = req.body;
+    const {
+      fullName,
+      email,
+      password,
+      phone,
+      location,
+      role = USER_ROLES.USER,
+    } = req.body;
 
     // Check if user already exists using admin client (server-side)
     const { data: existingUser, error: existingError } = await supabaseAdmin
       .from(TABLES.USERS)
-      .select('id')
-      .eq('email', email)
+      .select("id")
+      .eq("email", email)
       .maybeSingle();
 
     if (existingError) {
-      console.error('Error checking existing user:', existingError);
-      return errorResponse(res, 'Failed to validate user', 500);
+      console.error("Error checking existing user:", existingError);
+      return errorResponse(res, "Failed to validate user", 500);
     }
 
     if (existingUser) {
-      return errorResponse(res, 'User with this email already exists', 409);
+      return errorResponse(res, "User with this email already exists", 409);
     }
 
     // Hash password
@@ -36,35 +49,39 @@ export const register = async (req, res) => {
           phone,
           location,
           role,
-          created_at: new Date().toISOString()
-        }
+          created_at: new Date().toISOString(),
+        },
       ])
       .select()
       .maybeSingle();
 
     if (error) {
-      console.error('Registration error:', error);
-      return errorResponse(res, 'Failed to create user', 500);
+      console.error("Registration error:", error);
+      return errorResponse(res, "Failed to create user", 500);
     }
 
     // Generate token
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user);
 
-    // Remove password from response
+    // Remove password from response and capitalize role for frontend consistency
     delete user.password;
+    const formattedUser = {
+      ...user,
+      role: user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    };
 
     return successResponse(
       res,
       {
-        user,
-        token
+        user: formattedUser,
+        token,
       },
-      'User registered successfully',
-      201
+      "User registered successfully",
+      201,
     );
   } catch (error) {
-    console.error('Register error:', error);
-    return errorResponse(res, 'Registration failed', 500);
+    console.error("Register error:", error);
+    return errorResponse(res, "Registration failed", 500);
   }
 };
 
@@ -76,34 +93,42 @@ export const login = async (req, res) => {
     // Find user by email
     const { data: user, error } = await supabase
       .from(TABLES.USERS)
-      .select('*')
-      .eq('email', email)
+      .select("*")
+      .eq("email", email)
       .single();
 
     if (error || !user) {
-      return errorResponse(res, 'Invalid email or password', 401);
+      return errorResponse(res, "Invalid email or password", 401);
     }
 
     // Compare password
     const isPasswordValid = await comparePassword(password, user.password);
 
     if (!isPasswordValid) {
-      return errorResponse(res, 'Invalid email or password', 401);
+      return errorResponse(res, "Invalid email or password", 401);
     }
 
     // Generate token
-    const token = generateToken(user.id, user.role);
+    const token = generateToken(user);
 
-    // Remove password from response
+    // Remove password from response and capitalize role for frontend consistency
     delete user.password;
+    const formattedUser = {
+      ...user,
+      role: user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    };
 
-    return successResponse(res, {
-      user,
-      token
-    }, 'Login successful');
+    return successResponse(
+      res,
+      {
+        user: formattedUser,
+        token,
+      },
+      "Login successful",
+    );
   } catch (error) {
-    console.error('Login error:', error);
-    return errorResponse(res, 'Login failed', 500);
+    console.error("Login error:", error);
+    return errorResponse(res, "Login failed", 500);
   }
 };
 
@@ -114,18 +139,26 @@ export const getProfile = async (req, res) => {
 
     const { data: user, error } = await supabase
       .from(TABLES.USERS)
-      .select('id, full_name, email, phone, location, role, avatar_url, points, created_at')
-      .eq('id', userId)
+      .select(
+        "id, full_name, email, phone, location, role, avatar_url, points, created_at",
+      )
+      .eq("id", userId)
       .single();
 
     if (error || !user) {
-      return errorResponse(res, 'User not found', 404);
+      return errorResponse(res, "User not found", 404);
     }
 
-    return successResponse(res, user, 'Profile retrieved successfully');
+    // Capitalize role for frontend consistency (same as JWT token)
+    const formattedUser = {
+      ...user,
+      role: user.role.charAt(0).toUpperCase() + user.role.slice(1)
+    };
+
+    return successResponse(res, formattedUser, "Profile retrieved successfully");
   } catch (error) {
-    console.error('Get profile error:', error);
-    return errorResponse(res, 'Failed to get profile', 500);
+    console.error("Get profile error:", error);
+    return errorResponse(res, "Failed to get profile", 500);
   }
 };
 
@@ -144,19 +177,21 @@ export const updateProfile = async (req, res) => {
     const { data: user, error } = await supabase
       .from(TABLES.USERS)
       .update(updateData)
-      .eq('id', userId)
-      .select('id, full_name, email, phone, location, role, avatar_url, points, created_at')
+      .eq("id", userId)
+      .select(
+        "id, full_name, email, phone, location, role, avatar_url, points, created_at",
+      )
       .single();
 
     if (error) {
-      console.error('Update profile error:', error);
-      return errorResponse(res, 'Failed to update profile', 500);
+      console.error("Update profile error:", error);
+      return errorResponse(res, "Failed to update profile", 500);
     }
 
-    return successResponse(res, user, 'Profile updated successfully');
+    return successResponse(res, user, "Profile updated successfully");
   } catch (error) {
-    console.error('Update profile error:', error);
-    return errorResponse(res, 'Failed to update profile', 500);
+    console.error("Update profile error:", error);
+    return errorResponse(res, "Failed to update profile", 500);
   }
 };
 
@@ -169,19 +204,22 @@ export const changePassword = async (req, res) => {
     // Get user with password
     const { data: user, error } = await supabase
       .from(TABLES.USERS)
-      .select('password')
-      .eq('id', userId)
+      .select("password")
+      .eq("id", userId)
       .single();
 
     if (error || !user) {
-      return errorResponse(res, 'User not found', 404);
+      return errorResponse(res, "User not found", 404);
     }
 
     // Verify current password
-    const isPasswordValid = await comparePassword(currentPassword, user.password);
+    const isPasswordValid = await comparePassword(
+      currentPassword,
+      user.password,
+    );
 
     if (!isPasswordValid) {
-      return errorResponse(res, 'Current password is incorrect', 401);
+      return errorResponse(res, "Current password is incorrect", 401);
     }
 
     // Hash new password
@@ -191,17 +229,17 @@ export const changePassword = async (req, res) => {
     const { error: updateError } = await supabase
       .from(TABLES.USERS)
       .update({ password: hashedPassword })
-      .eq('id', userId);
+      .eq("id", userId);
 
     if (updateError) {
-      console.error('Change password error:', updateError);
-      return errorResponse(res, 'Failed to change password', 500);
+      console.error("Change password error:", updateError);
+      return errorResponse(res, "Failed to change password", 500);
     }
 
-    return successResponse(res, null, 'Password changed successfully');
+    return successResponse(res, null, "Password changed successfully");
   } catch (error) {
-    console.error('Change password error:', error);
-    return errorResponse(res, 'Failed to change password', 500);
+    console.error("Change password error:", error);
+    return errorResponse(res, "Failed to change password", 500);
   }
 };
 
@@ -210,5 +248,5 @@ export default {
   login,
   getProfile,
   updateProfile,
-  changePassword
+  changePassword,
 };

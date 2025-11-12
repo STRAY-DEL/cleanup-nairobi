@@ -1,53 +1,70 @@
-import jwt from 'jsonwebtoken';
-import { supabase } from '../config/supabase.js';
-import { TABLES, USER_ROLES } from '../config/database.js';
+import jwt from "jsonwebtoken";
+import { supabase } from "../config/supabase.js";
+import { TABLES, USER_ROLES } from "../config/database.js";
 
 // Verify JWT token and attach user to request
 export const authenticate = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: 'No token provided'
+        message: "No token provided",
       });
     }
 
     const token = authHeader.substring(7);
 
-    // Verify token with Supabase
-    const { data: { user }, error: userError } = await supabase.auth.getUser(token);
+    // Verify JWT token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    if (userError || !user) {
+    if (!decoded || !decoded.userId) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid token'
+        message: "Invalid token",
       });
     }
 
     // Get user profile from our custom users table
     const { data: profile, error: profileError } = await supabase
       .from(TABLES.USERS)
-      .select('*')
-      .eq('id', user.id)
+      .select("*")
+      .eq("id", decoded.userId)
       .single();
 
     if (profileError || !profile) {
       return res.status(401).json({
         success: false,
-        message: 'User profile not found'
+        message: "User profile not found",
       });
     }
+
+    // Remove password from user object
+    delete profile.password;
 
     // Attach user profile to request
     req.user = profile;
     next();
   } catch (error) {
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid token",
+      });
+    }
+
+    if (error.name === "TokenExpiredError") {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
+
     return res.status(500).json({
       success: false,
-      message: 'Authentication error',
-      error: error.message
+      message: "Authentication error",
+      error: error.message,
     });
   }
 };
@@ -58,14 +75,14 @@ export const authorize = (...roles) => {
     if (!req.user) {
       return res.status(401).json({
         success: false,
-        message: 'Not authenticated'
+        message: "Not authenticated",
       });
     }
 
     if (!roles.includes(req.user.role)) {
       return res.status(403).json({
         success: false,
-        message: 'Insufficient permissions'
+        message: "Insufficient permissions",
       });
     }
 
@@ -87,5 +104,5 @@ export default {
   authorize,
   isAdmin,
   isDriver,
-  isAuthenticated
+  isAuthenticated,
 };

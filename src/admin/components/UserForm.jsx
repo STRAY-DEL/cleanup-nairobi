@@ -86,7 +86,9 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
                 name="phone"
                 value={formData.phone}
                 onChange={handleChange}
+                placeholder="e.g., +254700000000"
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                required
               />
             </div>
             <div>
@@ -137,13 +139,15 @@ const UserForm = ({ user, onSubmit, onCancel }) => {
               </>
             )}
             <div>
-              <label className="block text-sm font-medium text-gray-700">Zone</label>
+              <label className="block text-sm font-medium text-gray-700">Location/Zone</label>
               <input
                 type="text"
                 name="zone"
                 value={formData.zone}
                 onChange={handleChange}
+                placeholder="e.g., Westlands, Kilimani, CBD"
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3"
+                required
               />
             </div>
             {!user && (

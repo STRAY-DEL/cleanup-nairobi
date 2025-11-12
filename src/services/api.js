@@ -1,5 +1,5 @@
 // API Base URL
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // Helper function to handle API responses
 const handleResponse = async (response) => {
@@ -25,7 +25,7 @@ const getAuthHeaders = () => {
 export const authAPI = {
   // Register new user
   register: async (userData) => {
-    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,7 +37,7 @@ export const authAPI = {
 
   // Login user
   login: async (credentials) => {
-    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -49,7 +49,7 @@ export const authAPI = {
 
   // Get user profile
   getProfile: async () => {
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -58,7 +58,7 @@ export const authAPI = {
 
   // Update user profile
   updateProfile: async (profileData) => {
-    const response = await fetch(`${API_BASE_URL}/auth/profile`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/profile`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(profileData),
@@ -68,7 +68,7 @@ export const authAPI = {
 
   // Change password
   changePassword: async (passwordData) => {
-    const response = await fetch(`${API_BASE_URL}/auth/change-password`, {
+    const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(passwordData),
@@ -82,7 +82,7 @@ export const eventsAPI = {
   // Get all events
   getAll: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/events?${queryString}`, {
+    const response = await fetch(`${API_BASE_URL}/api/events?${queryString}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -91,7 +91,7 @@ export const eventsAPI = {
 
   // Get event by ID
   getById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/events/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/events/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -100,7 +100,7 @@ export const eventsAPI = {
 
   // Join event
   join: async (eventId) => {
-    const response = await fetch(`${API_BASE_URL}/events/${eventId}/join`, {
+    const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/join`, {
       method: 'POST',
       headers: getAuthHeaders(),
     });
@@ -109,7 +109,7 @@ export const eventsAPI = {
 
   // Leave event
   leave: async (eventId) => {
-    const response = await fetch(`${API_BASE_URL}/events/${eventId}/leave`, {
+    const response = await fetch(`${API_BASE_URL}/api/events/${eventId}/leave`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
@@ -121,7 +121,7 @@ export const eventsAPI = {
 export const reportsAPI = {
   // Create waste report
   create: async (reportData) => {
-    const response = await fetch(`${API_BASE_URL}/reports`, {
+    const response = await fetch(`${API_BASE_URL}/api/reports`, {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify(reportData),
@@ -131,7 +131,7 @@ export const reportsAPI = {
 
   // Get user's reports
   getUserReports: async () => {
-    const response = await fetch(`${API_BASE_URL}/reports/user`, {
+    const response = await fetch(`${API_BASE_URL}/api/reports/user`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -141,7 +141,7 @@ export const reportsAPI = {
   // Get all reports (with filters)
   getAll: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/reports?${queryString}`, {
+    const response = await fetch(`${API_BASE_URL}/api/reports?${queryString}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -153,7 +153,7 @@ export const reportsAPI = {
 export const userAPI = {
   getAllUsers: async (params = {}) => {
     const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`${API_BASE_URL}/admin/users?${queryString}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users?${queryString}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -161,7 +161,7 @@ export const userAPI = {
   },
 
   getUserById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
       method: 'GET',
       headers: getAuthHeaders(),
     });
@@ -169,7 +169,7 @@ export const userAPI = {
   },
 
   updateUserRole: async (id, roleData) => {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${id}/role`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}/role`, {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(roleData),
@@ -178,7 +178,7 @@ export const userAPI = {
   },
 
   deleteUser: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/admin/users/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/api/admin/users/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders(),
     });
