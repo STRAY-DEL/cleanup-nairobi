@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authAPI } from '../services/api';
+import { getToken, setToken as setAuthToken, removeToken, getUserFromToken } from '../utils/auth';
 
 const AuthContext = createContext(null);
 
@@ -12,9 +13,9 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(getUserFromToken());
   const [loading, setLoading] = useState(true);
-  const [token, setToken] = useState(localStorage.getItem('token'));
+  const [token, setToken] = useState(getToken());
 
   // Load user profile on mount if token exists
   useEffect(() => {
@@ -26,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         } catch (error) {
           console.error('Failed to load user:', error);
           // Clear invalid token
-          localStorage.removeItem('token');
+          removeToken();
           setToken(null);
         }
       }
@@ -42,7 +43,7 @@ export const AuthProvider = ({ children }) => {
       const { user: userData, token: authToken } = response.data;
       
       // Store token
-      localStorage.setItem('token', authToken);
+      setAuthToken(authToken);
       setToken(authToken);
       setUser(userData);
       
@@ -58,7 +59,7 @@ export const AuthProvider = ({ children }) => {
       const { user: newUser, token: authToken } = response.data;
       
       // Store token
-      localStorage.setItem('token', authToken);
+      setAuthToken(authToken);
       setToken(authToken);
       setUser(newUser);
       
@@ -69,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    removeToken();
     setToken(null);
     setUser(null);
   };

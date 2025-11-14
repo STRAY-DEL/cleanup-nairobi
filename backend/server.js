@@ -48,7 +48,7 @@ app.use(notFound);
 app.use(errorHandler);
 
 // ---- START SERVER ----
-const DEFAULT_PORT = Number(process.env.PORT) || 5001;
+const DEFAULT_PORT = Number(process.env.PORT) || 5000;
 
 const startServer = (port) => {
   const server = app.listen(port, () => {

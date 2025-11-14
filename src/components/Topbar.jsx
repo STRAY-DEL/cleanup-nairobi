@@ -10,7 +10,7 @@ const Topbar = () => {
   return (
     <header className="bg-white shadow-sm p-4 flex justify-between items-center">
       <div>
-        <h1 className="text-2xl font-bold">Good Morning, {user?.username || 'Guest'}!</h1>
+        <h1 className="text-2xl font-bold">Good Morning, {user?.fullName || 'Guest'}!</h1>
         <p className="text-gray-500">Let's make a difference today.</p>
       </div>
       <div className="flex items-center">
